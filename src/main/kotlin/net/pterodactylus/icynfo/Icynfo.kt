@@ -35,6 +35,8 @@ import javax.swing.JPasswordField
 import javax.swing.JTextField
 import javax.swing.WindowConstants
 import javax.swing.border.EtchedBorder
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 fun main(args: Array<String>) {
 	System.setProperty("apple.awt.UIElement", "true")
@@ -194,9 +196,21 @@ private fun constrain(gridx: Int, gridy: Int, gridwidth: Int = 1, gridheight: In
 
 class AddServerDialog : JDialog(null as JFrame?) {
 
-	private val hostname = JTextField(30)
-	private val username = JTextField()
+	private val enableOkButtonOnHostnameAndUsernameDocumentListener = object : DocumentListener {
+		private fun checkInput() {
+			okButton.isEnabled = ((hostname.text != "") and (username.text != ""))
+		}
+
+		override fun changedUpdate(e: DocumentEvent?) = checkInput()
+		override fun insertUpdate(e: DocumentEvent?) = checkInput()
+		override fun removeUpdate(e: DocumentEvent?) = checkInput()
+	}
+
+	private val hostname: JTextField = JTextField(30).apply { document.addDocumentListener(enableOkButtonOnHostnameAndUsernameDocumentListener) }
+	private val username: JTextField = JTextField().apply { document.addDocumentListener(enableOkButtonOnHostnameAndUsernameDocumentListener) }
 	private val password = JPasswordField()
+	private val okButton = JButton("OK")
+
 	@Volatile
 	private var serverValid = false
 
@@ -226,11 +240,12 @@ class AddServerDialog : JDialog(null as JFrame?) {
 						this@AddServerDialog.isVisible = false
 					}
 				}, BorderLayout.CENTER)
-				add(JButton("OK").apply {
+				add(okButton.apply {
 					addActionListener {
-						serverValid = (hostname.text.trim() != "") and (username.text.trim() != "")
+						serverValid = true
 						this@AddServerDialog.isVisible = false
 					}
+					isEnabled = false
 				}, BorderLayout.LINE_END)
 			}, BorderLayout.LINE_END)
 		}, BorderLayout.PAGE_END)
