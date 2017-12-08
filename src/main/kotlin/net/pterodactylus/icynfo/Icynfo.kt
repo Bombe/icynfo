@@ -221,8 +221,10 @@ class AddServerDialog : JDialog(null as JFrame?) {
 			border = BorderFactory.createEmptyBorder(0, 12, 12, 12)
 			add(JPanel(BorderLayout()).apply {
 				add(JButton("Cancel").apply {
-					serverValid = false
-					this@AddServerDialog.isVisible = false
+					addActionListener {
+						serverValid = false
+						this@AddServerDialog.isVisible = false
+					}
 				}, BorderLayout.CENTER)
 				add(JButton("OK").apply {
 					addActionListener {
