@@ -10,8 +10,6 @@ import java.awt.Menu
 import java.awt.MenuItem
 import java.awt.Point
 import java.awt.PopupMenu
-import java.awt.SystemTray
-import java.awt.Toolkit
 import java.awt.TrayIcon
 import java.io.File
 import java.net.HttpURLConnection
@@ -47,9 +45,6 @@ fun main(args: Array<String>) {
 		TrayMenu(icynfo, trayIcon)
 	}
 }
-
-private val awtToolkit by lazy { Toolkit.getDefaultToolkit()!! }
-private val systemTray by lazy { if (SystemTray.isSupported()) SystemTray.getSystemTray() else null }
 
 class Icynfo(private val updateTooltip: (String) -> Unit) {
 
@@ -184,9 +179,6 @@ private class TrayMenu(private val icynfo: Icynfo, trayIcon: TrayIcon) {
 private fun quit() {
 	System.exit(0)
 }
-
-private fun constrain(gridx: Int, gridy: Int, gridwidth: Int = 1, gridheight: Int = 1, weightx: Double = 1.0, weighty: Double = 1.0, anchor: Int = GridBagConstraints.CENTER, fill: Int = GridBagConstraints.NONE, insets: Insets = Insets(0, 0, 0, 0), ipadx: Int = 0, ipady: Int = 0)
-		= GridBagConstraints(gridx, gridy, gridwidth, gridheight, weightx, weighty, anchor, fill, insets, ipadx, ipady)
 
 class AddServerDialog : JDialog(null as JFrame?) {
 
