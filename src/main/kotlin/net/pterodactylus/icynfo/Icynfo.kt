@@ -6,10 +6,7 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
 import java.awt.Label
-import java.awt.Menu
-import java.awt.MenuItem
 import java.awt.Point
-import java.awt.PopupMenu
 import java.awt.TrayIcon
 import java.io.File
 import java.util.concurrent.Executors
@@ -19,10 +16,6 @@ import javax.swing.BorderFactory
 import javax.swing.JButton
 import javax.swing.JDialog
 import javax.swing.JFrame
-import javax.swing.JOptionPane.OK_CANCEL_OPTION
-import javax.swing.JOptionPane.OK_OPTION
-import javax.swing.JOptionPane.WARNING_MESSAGE
-import javax.swing.JOptionPane.showConfirmDialog
 import javax.swing.JPanel
 import javax.swing.JPasswordField
 import javax.swing.JTextField
@@ -40,7 +33,7 @@ fun main(args: Array<String>) {
 		val icynfo = Icynfo { trayIcon.toolTip = it }.apply {
 			startTimer()
 		}
-		TrayMenu(icynfo, trayIcon)
+		TrayMenu(icynfo, trayIcon, { System.exit(0) })
 	}
 }
 
@@ -110,56 +103,6 @@ class Icynfo(private val updateTooltip: (String) -> Unit) {
 		)
 	}
 
-}
-
-private class TrayMenu(private val icynfo: Icynfo, trayIcon: TrayIcon) {
-
-	private val deleteMenu = Menu("Delete Server")
-
-	init {
-		trayIcon.popupMenu = createPopupMenu()
-		rebuildDeleteMenu()
-	}
-
-	private fun createPopupMenu() =
-			PopupMenu().apply {
-				add(MenuItem("Add Server").apply {
-					addActionListener { addServer() }
-				})
-				add(deleteMenu)
-				addSeparator()
-				add(MenuItem("Quit").apply {
-					addActionListener { quit() }
-				})
-			}
-
-	private fun addServer() {
-		AddServerDialog().getNewServer()
-				?.let(icynfo::addServer)
-				?.also { rebuildDeleteMenu() }
-	}
-
-	private fun rebuildDeleteMenu() {
-		deleteMenu.removeAll()
-		icynfo.currentServers.forEach { server ->
-			deleteMenu.add(MenuItem(server.hostname)).run {
-				addActionListener {
-					if (reallyDelete(server)) {
-						icynfo.removeServer(server)
-						rebuildDeleteMenu()
-					}
-				}
-			}
-		}
-	}
-
-	private fun reallyDelete(server: Server) =
-			showConfirmDialog(null, arrayOf("Really delete this server?", "${server.username} @ ${server.hostname}"), "Really delete server?", OK_CANCEL_OPTION, WARNING_MESSAGE) == OK_OPTION
-
-}
-
-private fun quit() {
-	System.exit(0)
 }
 
 class AddServerDialog : JDialog(null as JFrame?) {
