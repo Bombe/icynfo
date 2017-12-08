@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
 	val image = awtToolkit.getImage(Server::class.java.getResource("/icecast-logo.png"))!!
 	TrayIcon(image).let { trayIcon ->
 		systemTray.add(trayIcon)
-		Icynfo(trayIcon)
+		Icynfo { trayIcon.toolTip = it }
 				.startTimer()
 	}
 }
@@ -28,7 +28,7 @@ fun main(args: Array<String>) {
 private val awtToolkit by lazy { Toolkit.getDefaultToolkit()!! }
 private val systemTray by lazy { if (SystemTray.isSupported()) SystemTray.getSystemTray() else null }
 
-class Icynfo(private val icon: TrayIcon) {
+class Icynfo(private val updateTooltip: (String) -> Unit) {
 
 	private val servers by lazy { readServers() }
 	private val executor = Executors.newSingleThreadScheduledExecutor()!!
@@ -51,7 +51,7 @@ class Icynfo(private val icon: TrayIcon) {
 	}
 
 	private fun getInfo() {
-		icon.toolTip = servers
+		updateTooltip(servers
 				.map { it to it.getInfo() }
 				.map { (server, infoXml) ->
 					if (infoXml == null) {
@@ -67,6 +67,7 @@ class Icynfo(private val icon: TrayIcon) {
 					}
 				}
 				.joinToString("\n")
+		)
 	}
 
 }
