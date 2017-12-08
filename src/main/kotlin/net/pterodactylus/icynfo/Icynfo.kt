@@ -138,8 +138,6 @@ class Server(val hostname: String, val username: String, val password: String) {
 
 }
 
-private fun String.toBase64() = Base64.getEncoder().encodeToString(toByteArray())
-
 private fun ScheduledExecutorService.withFixedDelay(delay: Long, unit: TimeUnit, initialDelay: Long = 0, action: () -> Unit) =
 		scheduleWithFixedDelay(action, initialDelay, delay, unit)!!
 
