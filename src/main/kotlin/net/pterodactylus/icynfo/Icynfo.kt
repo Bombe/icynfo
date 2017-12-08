@@ -26,6 +26,9 @@ import javax.swing.BorderFactory
 import javax.swing.JButton
 import javax.swing.JDialog
 import javax.swing.JFrame
+import javax.swing.JOptionPane.OK_CANCEL_OPTION
+import javax.swing.JOptionPane.OK_OPTION
+import javax.swing.JOptionPane.showConfirmDialog
 import javax.swing.JPanel
 import javax.swing.JPasswordField
 import javax.swing.JTextField
@@ -167,12 +170,17 @@ private class TrayMenu(private val icynfo: Icynfo, trayIcon: TrayIcon) {
 		icynfo.currentServers.forEach { server ->
 			deleteMenu.add(MenuItem(server.hostname)).run {
 				addActionListener {
-					icynfo.removeServer(server)
-					rebuildDeleteMenu()
+					if (reallyDelete(server)) {
+						icynfo.removeServer(server)
+						rebuildDeleteMenu()
+					}
 				}
 			}
 		}
 	}
+
+	private fun reallyDelete(server: Server) =
+			showConfirmDialog(null, arrayOf("Really delete this server?", "${server.username} @ ${server.hostname}"), "Really delete server?", OK_CANCEL_OPTION) == OK_OPTION
 
 }
 
