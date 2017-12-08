@@ -1,11 +1,14 @@
 package net.pterodactylus.icynfo
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.awt.SystemTray
 import java.awt.Toolkit
 import java.awt.TrayIcon
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Base64
+import java.util.TimerTask
 import kotlin.concurrent.timer
 
 fun main(args: Array<String>) {
@@ -14,7 +17,30 @@ fun main(args: Array<String>) {
 	val image = awtToolkit.getImage(Server::class.java.getResource("/icecast-logo.png"))!!
 	trayIcon = TrayIcon(image)
 	systemTray.add(trayIcon)
-	timer("Update Icynfo Status", period = 15000) {
+	val icynfo = Icynfo(trayIcon)
+	timer("Update Icynfo Status", period = 15000, action = icynfo::getInfo)
+}
+
+private val awtToolkit by lazy { Toolkit.getDefaultToolkit()!! }
+private val systemTray by lazy { if (SystemTray.isSupported()) SystemTray.getSystemTray() else null }
+
+class Icynfo(private val icon: TrayIcon) {
+
+	private val servers by lazy { readServers() }
+
+	private fun readServers(): MutableList<Server> =
+			try {
+				ObjectMapper().readTree(File(System.getProperty("user.home"), ".icynfo"))
+						.let { config ->
+							config["servers"].map {
+								Server(it["hostname"].asText(), it["username"].asText(), it["password"].asText())
+							}.toMutableList()
+						}
+			} catch (_: Exception) {
+				mutableListOf()
+			}
+
+	fun getInfo(timerTask: TimerTask) {
 		trayIcon.toolTip = servers
 				.map { it to it.getInfo() }
 				.map { (server, infoXml) ->
@@ -32,13 +58,8 @@ fun main(args: Array<String>) {
 				}
 				.joinToString("\n")
 	}
+
 }
-
-private val awtToolkit by lazy { Toolkit.getDefaultToolkit()!! }
-private val systemTray by lazy { if (SystemTray.isSupported()) SystemTray.getSystemTray() else null }
-
-private val servers = mutableListOf<Server>(
-)
 
 private lateinit var trayIcon: TrayIcon
 
