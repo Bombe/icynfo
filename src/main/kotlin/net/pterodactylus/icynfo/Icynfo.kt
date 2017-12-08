@@ -122,18 +122,20 @@ class Icynfo(private val updateTooltip: (String) -> Unit) {
 
 }
 
-class Server(val hostname: String, val username: String, val password: String)
+class Server(val hostname: String, val username: String, val password: String) {
 
-private fun Server.getInfo() = try {
-	(URL("https://$hostname/admin/stats")
-			.openConnection() as HttpURLConnection)
-			.apply {
-				addRequestProperty("Authorization", "Basic ${(username + ":" + password).toBase64()}")
-			}
-			.inputStream
-			.toXmlNode()
-} catch (_: Exception) {
-	null
+	fun getInfo() = try {
+		(URL("https://$hostname/admin/stats")
+				.openConnection() as HttpURLConnection)
+				.apply {
+					addRequestProperty("Authorization", "Basic ${(username + ":" + password).toBase64()}")
+				}
+				.inputStream
+				.toXmlNode()
+	} catch (_: Exception) {
+		null
+	}
+
 }
 
 private fun String.toBase64() = Base64.getEncoder().encodeToString(toByteArray())
