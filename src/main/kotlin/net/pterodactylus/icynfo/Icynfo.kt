@@ -12,8 +12,6 @@ import java.awt.Point
 import java.awt.PopupMenu
 import java.awt.TrayIcon
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit.SECONDS
@@ -110,22 +108,6 @@ class Icynfo(private val updateTooltip: (String) -> Unit) {
 				}
 				.joinToString("\n")
 		)
-	}
-
-}
-
-class Server(val hostname: String, val username: String, val password: String) {
-
-	fun getInfo() = try {
-		(URL("https://$hostname/admin/stats")
-				.openConnection() as HttpURLConnection)
-				.apply {
-					addRequestProperty("Authorization", "Basic ${(username + ":" + password).toBase64()}")
-				}
-				.inputStream
-				.toXmlNode()
-	} catch (_: Exception) {
-		null
 	}
 
 }
