@@ -1,9 +1,12 @@
 package net.pterodactylus.icynfo
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import java.awt.MenuItem
+import java.awt.PopupMenu
 import java.awt.SystemTray
 import java.awt.Toolkit
 import java.awt.TrayIcon
+import java.awt.event.ActionEvent
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -20,6 +23,7 @@ fun main(args: Array<String>) {
 	val image = awtToolkit.getImage(Server::class.java.getResource("/icecast-logo.png"))!!
 	TrayIcon(image).let { trayIcon ->
 		systemTray.add(trayIcon)
+		trayIcon.popupMenu = popupMenu
 		Icynfo { trayIcon.toolTip = it }
 				.startTimer()
 	}
@@ -90,3 +94,15 @@ private fun String.toBase64() = Base64.getEncoder().encodeToString(toByteArray()
 
 private fun ScheduledExecutorService.withFixedDelay(delay: Long, unit: TimeUnit, initialDelay: Long = 0, action: () -> Unit) =
 		scheduleWithFixedDelay(action, initialDelay, delay, unit)!!
+
+private val popupMenu by lazy {
+	PopupMenu().apply {
+		add(MenuItem("Quit").apply {
+			addActionListener(::quit)
+		})
+	}
+}
+
+private fun quit(actionEvent: ActionEvent) {
+	System.exit(0)
+}
