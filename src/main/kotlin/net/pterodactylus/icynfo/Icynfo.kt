@@ -8,17 +8,21 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Base64
-import java.util.TimerTask
-import kotlin.concurrent.timer
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.SECONDS
 
 fun main(args: Array<String>) {
 	System.setProperty("apple.awt.UIElement", "true")
 	val systemTray = systemTray ?: throw UnsupportedOperationException("System tray is not supported")
 	val image = awtToolkit.getImage(Server::class.java.getResource("/icecast-logo.png"))!!
-	trayIcon = TrayIcon(image)
-	systemTray.add(trayIcon)
-	val icynfo = Icynfo(trayIcon)
-	timer("Update Icynfo Status", period = 15000, action = icynfo::getInfo)
+	TrayIcon(image).let { trayIcon ->
+		systemTray.add(trayIcon)
+		Icynfo(trayIcon)
+				.startTimer()
+	}
 }
 
 private val awtToolkit by lazy { Toolkit.getDefaultToolkit()!! }
@@ -27,6 +31,8 @@ private val systemTray by lazy { if (SystemTray.isSupported()) SystemTray.getSys
 class Icynfo(private val icon: TrayIcon) {
 
 	private val servers by lazy { readServers() }
+	private val executor = Executors.newSingleThreadScheduledExecutor()!!
+	private lateinit var currentTask: ScheduledFuture<*>
 
 	private fun readServers(): MutableList<Server> =
 			try {
@@ -40,8 +46,12 @@ class Icynfo(private val icon: TrayIcon) {
 				mutableListOf()
 			}
 
-	fun getInfo(timerTask: TimerTask) {
-		trayIcon.toolTip = servers
+	fun startTimer() {
+		currentTask = executor.withFixedDelay(15, SECONDS, action = ::getInfo)
+	}
+
+	private fun getInfo() {
+		icon.toolTip = servers
 				.map { it to it.getInfo() }
 				.map { (server, infoXml) ->
 					if (infoXml == null) {
@@ -61,8 +71,6 @@ class Icynfo(private val icon: TrayIcon) {
 
 }
 
-private lateinit var trayIcon: TrayIcon
-
 class Server(val hostname: String, val username: String, val password: String)
 
 private fun Server.getInfo() = try {
@@ -78,3 +86,6 @@ private fun Server.getInfo() = try {
 }
 
 private fun String.toBase64() = Base64.getEncoder().encodeToString(toByteArray())
+
+private fun ScheduledExecutorService.withFixedDelay(delay: Long, unit: TimeUnit, initialDelay: Long = 0, action: () -> Unit) =
+		scheduleWithFixedDelay(action, initialDelay, delay, unit)!!
