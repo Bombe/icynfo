@@ -16,11 +16,8 @@ import java.awt.TrayIcon
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Base64
 import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.SECONDS
 import javax.swing.BorderFactory
 import javax.swing.JButton
@@ -137,9 +134,6 @@ class Server(val hostname: String, val username: String, val password: String) {
 	}
 
 }
-
-private fun ScheduledExecutorService.withFixedDelay(delay: Long, unit: TimeUnit, initialDelay: Long = 0, action: () -> Unit) =
-		scheduleWithFixedDelay(action, initialDelay, delay, unit)!!
 
 private class TrayMenu(private val icynfo: Icynfo, trayIcon: TrayIcon) {
 
