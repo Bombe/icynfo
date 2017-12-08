@@ -6,6 +6,7 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
 import java.awt.Label
+import java.awt.Menu
 import java.awt.MenuItem
 import java.awt.Point
 import java.awt.PopupMenu
@@ -40,7 +41,7 @@ fun main(args: Array<String>) {
 		val icynfo = Icynfo { trayIcon.toolTip = it }.apply {
 			startTimer()
 		}
-		trayIcon.popupMenu = createPopupMenu(icynfo)
+		TrayMenu(icynfo, trayIcon)
 	}
 }
 
@@ -49,6 +50,7 @@ private val systemTray by lazy { if (SystemTray.isSupported()) SystemTray.getSys
 
 class Icynfo(private val updateTooltip: (String) -> Unit) {
 
+	val currentServers: List<Server> get() = servers
 	private val servers by lazy { readServers() }
 	private val executor = Executors.newSingleThreadScheduledExecutor()!!
 	private lateinit var currentTask: ScheduledFuture<*>
@@ -84,6 +86,11 @@ class Icynfo(private val updateTooltip: (String) -> Unit) {
 
 	fun addServer(server: Server) {
 		servers += server
+		saveServers()
+	}
+
+	fun removeServer(server: Server) {
+		servers -= server
 		saveServers()
 	}
 
@@ -128,24 +135,49 @@ private fun String.toBase64() = Base64.getEncoder().encodeToString(toByteArray()
 private fun ScheduledExecutorService.withFixedDelay(delay: Long, unit: TimeUnit, initialDelay: Long = 0, action: () -> Unit) =
 		scheduleWithFixedDelay(action, initialDelay, delay, unit)!!
 
-private fun createPopupMenu(icynfo: Icynfo) =
-		PopupMenu().apply {
-			add(MenuItem("Add Server").apply {
-				addActionListener { addServer(icynfo) }
-			})
-			addSeparator()
-			add(MenuItem("Quit").apply {
-				addActionListener { quit() }
-			})
+private class TrayMenu(private val icynfo: Icynfo, trayIcon: TrayIcon) {
+
+	private val deleteMenu = Menu("Delete Server")
+
+	init {
+		trayIcon.popupMenu = createPopupMenu()
+		rebuildDeleteMenu()
+	}
+
+	private fun createPopupMenu() =
+			PopupMenu().apply {
+				add(MenuItem("Add Server").apply {
+					addActionListener { addServer() }
+				})
+				add(deleteMenu)
+				addSeparator()
+				add(MenuItem("Quit").apply {
+					addActionListener { quit() }
+				})
+			}
+
+	private fun addServer() {
+		AddServerDialog().getNewServer()
+				?.let(icynfo::addServer)
+				?.also { rebuildDeleteMenu() }
+	}
+
+	private fun rebuildDeleteMenu() {
+		deleteMenu.removeAll()
+		icynfo.currentServers.forEach { server ->
+			deleteMenu.add(MenuItem(server.hostname)).run {
+				addActionListener {
+					icynfo.removeServer(server)
+					rebuildDeleteMenu()
+				}
+			}
 		}
+	}
+
+}
 
 private fun quit() {
 	System.exit(0)
-}
-
-private fun addServer(icynfo: Icynfo) {
-	AddServerDialog().getNewServer()
-			?.let(icynfo::addServer)
 }
 
 private fun constrain(gridx: Int, gridy: Int, gridwidth: Int = 1, gridheight: Int = 1, weightx: Double = 1.0, weighty: Double = 1.0, anchor: Int = GridBagConstraints.CENTER, fill: Int = GridBagConstraints.NONE, insets: Insets = Insets(0, 0, 0, 0), ipadx: Int = 0, ipady: Int = 0)
