@@ -28,6 +28,7 @@ import javax.swing.JDialog
 import javax.swing.JFrame
 import javax.swing.JOptionPane.OK_CANCEL_OPTION
 import javax.swing.JOptionPane.OK_OPTION
+import javax.swing.JOptionPane.WARNING_MESSAGE
 import javax.swing.JOptionPane.showConfirmDialog
 import javax.swing.JPanel
 import javax.swing.JPasswordField
@@ -180,7 +181,7 @@ private class TrayMenu(private val icynfo: Icynfo, trayIcon: TrayIcon) {
 	}
 
 	private fun reallyDelete(server: Server) =
-			showConfirmDialog(null, arrayOf("Really delete this server?", "${server.username} @ ${server.hostname}"), "Really delete server?", OK_CANCEL_OPTION) == OK_OPTION
+			showConfirmDialog(null, arrayOf("Really delete this server?", "${server.username} @ ${server.hostname}"), "Really delete server?", OK_CANCEL_OPTION, WARNING_MESSAGE) == OK_OPTION
 
 }
 
